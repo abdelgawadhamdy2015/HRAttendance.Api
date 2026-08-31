@@ -53,7 +53,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     }
     else
     {
-        options.UseInMemoryDatabase("HRAttendanceDb");
+        options.UseInMemoryDatabase("master");
     }
 });
 

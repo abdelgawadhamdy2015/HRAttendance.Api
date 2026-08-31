@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "ny5fjCw3pM8=",
+  "dgSpecHash": "CjezroI7dRM=",
   "success": true,
-  "projectFilePath": "/Users/taif/Desktop/ttech/last_updated/my/dotnet_backend/HRAttendance.Api/HRAttendance.Api.csproj",
+  "projectFilePath": "/Users/taif/Desktop/ttech/last_updated/my/hr/HRAttendance.Api/HRAttendance.Api.csproj",
   "expectedPackageFiles": [
     "/Users/taif/.nuget/packages/azure.core/1.35.0/azure.core.1.35.0.nupkg.sha512",
     "/Users/taif/.nuget/packages/azure.identity/1.10.3/azure.identity.1.10.3.nupkg.sha512",
@@ -82,9 +82,9 @@
     "/Users/taif/.nuget/packages/system.threading.channels/6.0.0/system.threading.channels.6.0.0.nupkg.sha512",
     "/Users/taif/.nuget/packages/system.threading.tasks.extensions/4.5.4/system.threading.tasks.extensions.4.5.4.nupkg.sha512",
     "/Users/taif/.nuget/packages/system.windows.extensions/6.0.0/system.windows.extensions.6.0.0.nupkg.sha512",
+    "/Users/taif/.nuget/packages/microsoft.netcore.app.ref/8.0.28/microsoft.netcore.app.ref.8.0.28.nupkg.sha512",
     "/Users/taif/.nuget/packages/microsoft.aspnetcore.app.ref/8.0.28/microsoft.aspnetcore.app.ref.8.0.28.nupkg.sha512",
-    "/Users/taif/.nuget/packages/microsoft.netcore.app.host.osx-arm64/8.0.28/microsoft.netcore.app.host.osx-arm64.8.0.28.nupkg.sha512",
-    "/Users/taif/.nuget/packages/microsoft.netcore.app.ref/8.0.28/microsoft.netcore.app.ref.8.0.28.nupkg.sha512"
+    "/Users/taif/.nuget/packages/microsoft.netcore.app.host.osx-arm64/8.0.28/microsoft.netcore.app.host.osx-arm64.8.0.28.nupkg.sha512"
   ],
   "logs": []
 }

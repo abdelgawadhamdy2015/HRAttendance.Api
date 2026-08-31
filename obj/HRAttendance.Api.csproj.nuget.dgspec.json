@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "/Users/taif/Desktop/ttech/last_updated/my/dotnet_backend/HRAttendance.Api/HRAttendance.Api.csproj": {}
+    "/Users/taif/Desktop/ttech/last_updated/my/hr/HRAttendance.Api/HRAttendance.Api.csproj": {}
   },
   "projects": {
-    "/Users/taif/Desktop/ttech/last_updated/my/dotnet_backend/HRAttendance.Api/HRAttendance.Api.csproj": {
+    "/Users/taif/Desktop/ttech/last_updated/my/hr/HRAttendance.Api/HRAttendance.Api.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/Users/taif/Desktop/ttech/last_updated/my/dotnet_backend/HRAttendance.Api/HRAttendance.Api.csproj",
+        "projectUniqueName": "/Users/taif/Desktop/ttech/last_updated/my/hr/HRAttendance.Api/HRAttendance.Api.csproj",
         "projectName": "HRAttendance.Api",
-        "projectPath": "/Users/taif/Desktop/ttech/last_updated/my/dotnet_backend/HRAttendance.Api/HRAttendance.Api.csproj",
+        "projectPath": "/Users/taif/Desktop/ttech/last_updated/my/hr/HRAttendance.Api/HRAttendance.Api.csproj",
         "packagesPath": "/Users/taif/.nuget/packages/",
-        "outputPath": "/Users/taif/Desktop/ttech/last_updated/my/dotnet_backend/HRAttendance.Api/obj/",
+        "outputPath": "/Users/taif/Desktop/ttech/last_updated/my/hr/HRAttendance.Api/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "/Users/taif/.nuget/NuGet/NuGet.Config"
