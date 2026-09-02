@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "CjezroI7dRM=",
+  "dgSpecHash": "bSqUR2RUrB0=",
   "success": true,
   "projectFilePath": "/Users/taif/Desktop/ttech/last_updated/my/hr/HRAttendance.Api/HRAttendance.Api.csproj",
   "expectedPackageFiles": [
@@ -46,6 +46,7 @@
     "/Users/taif/.nuget/packages/microsoft.sqlserver.server/1.0.0/microsoft.sqlserver.server.1.0.0.nupkg.sha512",
     "/Users/taif/.nuget/packages/microsoft.win32.systemevents/6.0.0/microsoft.win32.systemevents.6.0.0.nupkg.sha512",
     "/Users/taif/.nuget/packages/mono.texttemplating/2.2.1/mono.texttemplating.2.2.1.nupkg.sha512",
+    "/Users/taif/.nuget/packages/questpdf/2026.8.0/questpdf.2026.8.0.nupkg.sha512",
     "/Users/taif/.nuget/packages/swashbuckle.aspnetcore/6.6.2/swashbuckle.aspnetcore.6.6.2.nupkg.sha512",
     "/Users/taif/.nuget/packages/swashbuckle.aspnetcore.swagger/6.6.2/swashbuckle.aspnetcore.swagger.6.6.2.nupkg.sha512",
     "/Users/taif/.nuget/packages/swashbuckle.aspnetcore.swaggergen/6.6.2/swashbuckle.aspnetcore.swaggergen.6.6.2.nupkg.sha512",

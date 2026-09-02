@@ -2,21 +2,20 @@
 
 #nullable disable
 
-namespace HRAttendance.Api.Migrations
+namespace HRAttendance.Api.Migrations;
+
+/// <inheritdoc />
+public partial class Init6 : Migration
 {
     /// <inheritdoc />
-    public partial class Init6 : Migration
+    protected override void Up(MigrationBuilder migrationBuilder)
     {
-        /// <inheritdoc />
-        protected override void Up(MigrationBuilder migrationBuilder)
-        {
 
-        }
+    }
 
-        /// <inheritdoc />
-        protected override void Down(MigrationBuilder migrationBuilder)
-        {
+    /// <inheritdoc />
+    protected override void Down(MigrationBuilder migrationBuilder)
+    {
 
-        }
     }
 }

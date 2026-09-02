@@ -9,320 +9,319 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
-namespace HRAttendance.Api.Migrations
+namespace HRAttendance.Api.Migrations;
+
+[DbContext(typeof(AppDbContext))]
+[Migration("20260831172205_Init3")]
+partial class Init3
 {
-    [DbContext(typeof(AppDbContext))]
-    [Migration("20260831172205_Init3")]
-    partial class Init3
+    /// <inheritdoc />
+    protected override void BuildTargetModel(ModelBuilder modelBuilder)
     {
-        /// <inheritdoc />
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
-        {
 #pragma warning disable 612, 618
-            modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.8")
-                .HasAnnotation("Relational:MaxIdentifierLength", 128);
+        modelBuilder
+            .HasAnnotation("ProductVersion", "8.0.8")
+            .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
-            SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+        SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("HRAttendance.Api.Models.AppNotification", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+        modelBuilder.Entity("HRAttendance.Api.Models.AppNotification", b =>
+            {
+                b.Property<int>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                b.Property<DateTime>("CreatedAt")
+                    .HasColumnType("datetime2");
 
-                    b.Property<string>("Message")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("Message")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Severity")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("Severity")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.ToTable("Notifications");
-                });
+                b.ToTable("Notifications");
+            });
 
-            modelBuilder.Entity("HRAttendance.Api.Models.AttendanceRecord", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+        modelBuilder.Entity("HRAttendance.Api.Models.AttendanceRecord", b =>
+            {
+                b.Property<int>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<TimeOnly?>("CheckIn")
-                        .HasColumnType("time");
+                b.Property<TimeOnly?>("CheckIn")
+                    .HasColumnType("time");
 
-                    b.Property<TimeOnly?>("CheckOut")
-                        .HasColumnType("time");
+                b.Property<TimeOnly?>("CheckOut")
+                    .HasColumnType("time");
 
-                    b.Property<DateOnly>("Date")
-                        .HasColumnType("date");
+                b.Property<DateOnly>("Date")
+                    .HasColumnType("date");
 
-                    b.Property<int>("EmployeeId")
-                        .HasColumnType("int");
+                b.Property<int>("EmployeeId")
+                    .HasColumnType("int");
 
-                    b.Property<int>("LateMinutes")
-                        .HasColumnType("int");
+                b.Property<int>("LateMinutes")
+                    .HasColumnType("int");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("Status")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("EmployeeId", "Date")
-                        .IsUnique();
+                b.HasIndex("EmployeeId", "Date")
+                    .IsUnique();
 
-                    b.ToTable("AttendanceRecords");
-                });
+                b.ToTable("AttendanceRecords");
+            });
 
-            modelBuilder.Entity("HRAttendance.Api.Models.Employee", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+        modelBuilder.Entity("HRAttendance.Api.Models.Employee", b =>
+            {
+                b.Property<int>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("AvatarUrl")
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("AvatarUrl")
+                    .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Code")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("Code")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Department")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("Department")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("FullName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("FullName")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("JobTitle")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("JobTitle")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.ToTable("Employees");
-                });
+                b.ToTable("Employees");
+            });
 
-            modelBuilder.Entity("HRAttendance.Api.Models.Mission", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+        modelBuilder.Entity("HRAttendance.Api.Models.Mission", b =>
+            {
+                b.Property<int>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<DateOnly>("Date")
-                        .HasColumnType("date");
+                b.Property<DateOnly>("Date")
+                    .HasColumnType("date");
 
-                    b.Property<int>("EmployeeId")
-                        .HasColumnType("int");
+                b.Property<int>("EmployeeId")
+                    .HasColumnType("int");
 
-                    b.Property<string>("Location")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("Location")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Reason")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("Reason")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("EmployeeId");
+                b.HasIndex("EmployeeId");
 
-                    b.ToTable("Missions");
-                });
+                b.ToTable("Missions");
+            });
 
-            modelBuilder.Entity("HRAttendance.Api.Models.Permission", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+        modelBuilder.Entity("HRAttendance.Api.Models.Permission", b =>
+            {
+                b.Property<int>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("Description")
+                    .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("Name")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.ToTable("Permissions");
-                });
+                b.ToTable("Permissions");
+            });
 
-            modelBuilder.Entity("HRAttendance.Api.Models.PermissionRequest", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+        modelBuilder.Entity("HRAttendance.Api.Models.PermissionRequest", b =>
+            {
+                b.Property<int>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<DateOnly>("Date")
-                        .HasColumnType("date");
+                b.Property<DateOnly>("Date")
+                    .HasColumnType("date");
 
-                    b.Property<int>("EmployeeId")
-                        .HasColumnType("int");
+                b.Property<int>("EmployeeId")
+                    .HasColumnType("int");
 
-                    b.Property<TimeOnly>("From")
-                        .HasColumnType("time");
+                b.Property<TimeOnly>("From")
+                    .HasColumnType("time");
 
-                    b.Property<string>("Reason")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("Reason")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
 
-                    b.Property<TimeOnly>("To")
-                        .HasColumnType("time");
+                b.Property<TimeOnly>("To")
+                    .HasColumnType("time");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("EmployeeId");
+                b.HasIndex("EmployeeId");
 
-                    b.ToTable("PermissionRequests");
-                });
+                b.ToTable("PermissionRequests");
+            });
 
-            modelBuilder.Entity("HRAttendance.Api.Models.User", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+        modelBuilder.Entity("HRAttendance.Api.Models.User", b =>
+            {
+                b.Property<int>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                b.Property<DateTime>("CreatedAt")
+                    .HasColumnType("datetime2");
 
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                b.Property<string>("Email")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(450)");
 
-                    b.Property<string>("FullName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("FullName")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
+                b.Property<bool>("IsActive")
+                    .HasColumnType("bit");
 
-                    b.Property<string>("PasswordHash")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("PasswordHash")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Username")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                b.Property<string>("Username")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(450)");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("Email")
-                        .IsUnique();
+                b.HasIndex("Email")
+                    .IsUnique();
 
-                    b.HasIndex("Username")
-                        .IsUnique();
+                b.HasIndex("Username")
+                    .IsUnique();
 
-                    b.ToTable("Users");
-                });
+                b.ToTable("Users");
+            });
 
-            modelBuilder.Entity("HRAttendance.Api.Models.UserPermission", b =>
-                {
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
+        modelBuilder.Entity("HRAttendance.Api.Models.UserPermission", b =>
+            {
+                b.Property<int>("UserId")
+                    .HasColumnType("int");
 
-                    b.Property<int>("PermissionId")
-                        .HasColumnType("int");
+                b.Property<int>("PermissionId")
+                    .HasColumnType("int");
 
-                    b.HasKey("UserId", "PermissionId");
+                b.HasKey("UserId", "PermissionId");
 
-                    b.HasIndex("PermissionId");
+                b.HasIndex("PermissionId");
 
-                    b.ToTable("UserPermissions");
-                });
+                b.ToTable("UserPermissions");
+            });
 
-            modelBuilder.Entity("HRAttendance.Api.Models.AttendanceRecord", b =>
-                {
-                    b.HasOne("HRAttendance.Api.Models.Employee", "Employee")
-                        .WithMany("AttendanceRecords")
-                        .HasForeignKey("EmployeeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+        modelBuilder.Entity("HRAttendance.Api.Models.AttendanceRecord", b =>
+            {
+                b.HasOne("HRAttendance.Api.Models.Employee", "Employee")
+                    .WithMany("AttendanceRecords")
+                    .HasForeignKey("EmployeeId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.Navigation("Employee");
-                });
+                b.Navigation("Employee");
+            });
 
-            modelBuilder.Entity("HRAttendance.Api.Models.Mission", b =>
-                {
-                    b.HasOne("HRAttendance.Api.Models.Employee", "Employee")
-                        .WithMany("Missions")
-                        .HasForeignKey("EmployeeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+        modelBuilder.Entity("HRAttendance.Api.Models.Mission", b =>
+            {
+                b.HasOne("HRAttendance.Api.Models.Employee", "Employee")
+                    .WithMany("Missions")
+                    .HasForeignKey("EmployeeId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.Navigation("Employee");
-                });
+                b.Navigation("Employee");
+            });
 
-            modelBuilder.Entity("HRAttendance.Api.Models.PermissionRequest", b =>
-                {
-                    b.HasOne("HRAttendance.Api.Models.Employee", "Employee")
-                        .WithMany("Permissions")
-                        .HasForeignKey("EmployeeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+        modelBuilder.Entity("HRAttendance.Api.Models.PermissionRequest", b =>
+            {
+                b.HasOne("HRAttendance.Api.Models.Employee", "Employee")
+                    .WithMany("Permissions")
+                    .HasForeignKey("EmployeeId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.Navigation("Employee");
-                });
+                b.Navigation("Employee");
+            });
 
-            modelBuilder.Entity("HRAttendance.Api.Models.UserPermission", b =>
-                {
-                    b.HasOne("HRAttendance.Api.Models.Permission", "Permission")
-                        .WithMany("UserPermissions")
-                        .HasForeignKey("PermissionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+        modelBuilder.Entity("HRAttendance.Api.Models.UserPermission", b =>
+            {
+                b.HasOne("HRAttendance.Api.Models.Permission", "Permission")
+                    .WithMany("UserPermissions")
+                    .HasForeignKey("PermissionId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.HasOne("HRAttendance.Api.Models.User", "User")
-                        .WithMany("UserPermissions")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.HasOne("HRAttendance.Api.Models.User", "User")
+                    .WithMany("UserPermissions")
+                    .HasForeignKey("UserId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.Navigation("Permission");
+                b.Navigation("Permission");
 
-                    b.Navigation("User");
-                });
+                b.Navigation("User");
+            });
 
-            modelBuilder.Entity("HRAttendance.Api.Models.Employee", b =>
-                {
-                    b.Navigation("AttendanceRecords");
+        modelBuilder.Entity("HRAttendance.Api.Models.Employee", b =>
+            {
+                b.Navigation("AttendanceRecords");
 
-                    b.Navigation("Missions");
+                b.Navigation("Missions");
 
-                    b.Navigation("Permissions");
-                });
+                b.Navigation("Permissions");
+            });
 
-            modelBuilder.Entity("HRAttendance.Api.Models.Permission", b =>
-                {
-                    b.Navigation("UserPermissions");
-                });
+        modelBuilder.Entity("HRAttendance.Api.Models.Permission", b =>
+            {
+                b.Navigation("UserPermissions");
+            });
 
-            modelBuilder.Entity("HRAttendance.Api.Models.User", b =>
-                {
-                    b.Navigation("UserPermissions");
-                });
+        modelBuilder.Entity("HRAttendance.Api.Models.User", b =>
+            {
+                b.Navigation("UserPermissions");
+            });
 #pragma warning restore 612, 618
-        }
     }
 }
