@@ -58,9 +58,9 @@ builder.Services.AddSingleton<JwtTokenService>();
 builder.Services.AddScoped<IAttendanceReportService, AttendanceReportService>();
 builder.Services.AddSingleton<IAttendanceReportPdfService, AttendanceReportPdfService>();
 
-// QuestPDF license mode. Evaluation is suitable for development/testing.
-// For production, choose the license type that matches your organization's eligibility.
-QuestPDF.Settings.License = LicenseType.Evaluation;
+// QuestPDF: Community is free for eligible individuals/organizations.
+// If the organization is not eligible, use the appropriate paid license instead.
+QuestPDF.Settings.License = LicenseType.Community;
 
 var jwtSection = builder.Configuration.GetSection("Jwt");
 builder.Services.AddAuthentication(options =>
