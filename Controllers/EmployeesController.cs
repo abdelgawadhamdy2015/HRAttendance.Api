@@ -1,3 +1,4 @@
+using HRAttendance.Api.Authorization;
 using HRAttendance.Api.Data;
 using HRAttendance.Api.Dtos;
 using HRAttendance.Api.Models;
@@ -41,6 +42,42 @@ public class EmployeesController : ControllerBase
             })
             .ToListAsync();
         return Ok(items);
+    }
+
+    // POST /api/employees
+    // Creates a new employee record. Codes are expected to be unique
+    // (e.g. "031"), matching the convention used by SeedData.
+    [HttpPost]
+    [RequirePermission("Employees.Manage")]
+    public async Task<ActionResult<EmployeeDto>> Create(CreateEmployeeRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.Code) || string.IsNullOrWhiteSpace(request.FullName))
+            return BadRequest("Code and FullName are required.");
+
+        if (await _db.Employees.AnyAsync(e => e.Code == request.Code))
+            return Conflict("An employee with this code already exists.");
+
+        var employee = new Employee
+        {
+            Code = request.Code,
+            FullName = request.FullName,
+            JobTitle = request.JobTitle,
+            Department = request.Department,
+            AvatarUrl = request.AvatarUrl
+        };
+
+        _db.Employees.Add(employee);
+        await _db.SaveChangesAsync();
+
+        return CreatedAtAction(nameof(GetById), new { id = employee.Id }, new EmployeeDto
+        {
+            Id = employee.Id,
+            Code = employee.Code,
+            FullName = employee.FullName,
+            JobTitle = employee.JobTitle,
+            Department = employee.Department,
+            AvatarUrl = employee.AvatarUrl
+        });
     }
 
     // GET /api/employees/1
