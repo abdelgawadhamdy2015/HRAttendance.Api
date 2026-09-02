@@ -4,6 +4,7 @@ using HRAttendance.Api.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using QuestPDF.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -41,24 +42,25 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 // --- Database ---
-// Default: in-memory DB so the API runs instantly with no setup.
-// To use real SQL Server, set "UseSqlServer": true in appsettings.json
-// and provide a valid "ConnectionStrings:Default".
 var useSqlServer = builder.Configuration.GetValue<bool>("UseSqlServer");
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
     if (useSqlServer)
-    {
         options.UseSqlServer(builder.Configuration.GetConnectionString("Default"));
-    }
     else
-    {
         options.UseInMemoryDatabase("master");
-    }
 });
 
-// --- Auth: JWT bearer tokens issued by /api/auth/login and /api/auth/register ---
+// --- Auth ---
 builder.Services.AddSingleton<JwtTokenService>();
+
+// --- Attendance reports ---
+builder.Services.AddScoped<IAttendanceReportService, AttendanceReportService>();
+builder.Services.AddSingleton<IAttendanceReportPdfService, AttendanceReportPdfService>();
+
+// QuestPDF license mode. Evaluation is suitable for development/testing.
+// For production, choose the license type that matches your organization's eligibility.
+QuestPDF.Settings.License = LicenseType.Evaluation;
 
 var jwtSection = builder.Configuration.GetSection("Jwt");
 builder.Services.AddAuthentication(options =>
@@ -82,7 +84,6 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 
-// --- CORS: allow the Flutter app (mobile emulator / web) to call the API ---
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFlutterApp", policy =>
@@ -93,7 +94,6 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// Seed data on startup
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
