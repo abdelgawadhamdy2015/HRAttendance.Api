@@ -10,12 +10,12 @@ public class EmployeeDto
     public string? AvatarUrl { get; set; }
 }
 
-public class AttendanceDayDto
-{
-    public DateOnly Date { get; set; }
-    public string Status { get; set; } = "none";
-    // present | annualLeave | casualLeave | sickLeave | permission | cutOff | mission | none
-}
+// public class AttendanceDayDto
+// {
+//     public DateOnly Date { get; set; }
+//     public string Status { get; set; } = "none";
+//     // present | annualLeave | casualLeave | sickLeave | permission | cutOff | mission | none
+// }
 
 public class EmployeeMonthDetailsDto
 {
