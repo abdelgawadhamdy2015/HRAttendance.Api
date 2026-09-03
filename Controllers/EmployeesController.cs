@@ -122,7 +122,7 @@ public class EmployeesController : ControllerBase
             PermissionsUsed = permissionsUsed,
             PermissionsAllowed = 2,
             TotalLateMinutes = records.Sum(r => r.LateMinutes),
-            Days = records.Select(r => new AttendanceDayDto { Date = r.Date, Status = r.Status }).ToList()
+            Days = records.Select(r => new EmployeeAttendanceDayDto { Date = r.Date, Status = StatusToString(r.Status) }).ToList()
         };
 
         return Ok(dto);
