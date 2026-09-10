@@ -7,6 +7,7 @@ namespace HRAttendance.Api.Services;
 public interface IAuditService
 {
     Task LogAsync(int? userId, string action, string entity, int? entityId, object? oldValue = null, object? newValue = null);
+    Task NotifyAsync(string message, NotificationSeverity severity = NotificationSeverity.Info);
 }
 
 public sealed class AuditService(AppDbContext db) : IAuditService
@@ -24,6 +25,17 @@ public sealed class AuditService(AppDbContext db) : IAuditService
             OldValue = oldValue is null ? null : JsonSerializer.Serialize(oldValue),
             NewValue = newValue is null ? null : JsonSerializer.Serialize(newValue),
             Timestamp = DateTime.UtcNow
+        });
+        await _db.SaveChangesAsync();
+    }
+
+    public async Task NotifyAsync(string message, NotificationSeverity severity = NotificationSeverity.Info)
+    {
+        _db.Notifications.Add(new AppNotification
+        {
+            Message = message,
+            Severity = severity,
+            CreatedAt = DateTime.UtcNow
         });
         await _db.SaveChangesAsync();
     }
