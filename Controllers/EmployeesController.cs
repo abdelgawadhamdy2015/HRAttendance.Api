@@ -26,27 +26,32 @@ public class EmployeesController : ControllerBase
         _ => "none"
     };
 
+    private static EmployeeDto ToDto(Employee e) => new()
+    {
+        Id = e.Id,
+        Code = e.Code,
+        FullName = e.FullName,
+        JobTitle = e.JobTitle,
+        Department = e.Department,
+        AvatarUrl = e.AvatarUrl,
+        NameArabic = e.NameArabic,
+        NameEnglish = e.NameEnglish,
+        GradeArabic = e.GradeArabic,
+        GradeEnglish = e.GradeEnglish,
+        JoiningDate = e.JoiningDate,
+        Status = e.Status.ToString(),
+        Notes = e.Notes
+    };
+
     // GET /api/employees
     [HttpGet]
     public async Task<ActionResult<List<EmployeeDto>>> GetAll()
     {
-        var items = await _db.Employees
-            .Select(e => new EmployeeDto
-            {
-                Id = e.Id,
-                Code = e.Code,
-                FullName = e.FullName,
-                JobTitle = e.JobTitle,
-                Department = e.Department,
-                AvatarUrl = e.AvatarUrl
-            })
-            .ToListAsync();
-        return Ok(items);
+        var items = await _db.Employees.ToListAsync();
+        return Ok(items.Select(ToDto).ToList());
     }
 
     // POST /api/employees
-    // Creates a new employee record. Codes are expected to be unique
-    // (e.g. "031"), matching the convention used by SeedData.
     [HttpPost]
     [RequirePermission("Employees.Manage")]
     public async Task<ActionResult<EmployeeDto>> Create(CreateEmployeeRequest request)
@@ -63,21 +68,20 @@ public class EmployeesController : ControllerBase
             FullName = request.FullName,
             JobTitle = request.JobTitle,
             Department = request.Department,
-            AvatarUrl = request.AvatarUrl
+            AvatarUrl = request.AvatarUrl,
+            NameArabic = request.NameArabic,
+            NameEnglish = request.NameEnglish,
+            GradeArabic = request.GradeArabic,
+            GradeEnglish = request.GradeEnglish,
+            JoiningDate = request.JoiningDate,
+            Notes = request.Notes,
+            CreatedAt = DateTime.UtcNow
         };
 
         _db.Employees.Add(employee);
         await _db.SaveChangesAsync();
 
-        return CreatedAtAction(nameof(GetById), new { id = employee.Id }, new EmployeeDto
-        {
-            Id = employee.Id,
-            Code = employee.Code,
-            FullName = employee.FullName,
-            JobTitle = employee.JobTitle,
-            Department = employee.Department,
-            AvatarUrl = employee.AvatarUrl
-        });
+        return CreatedAtAction(nameof(GetById), new { id = employee.Id }, ToDto(employee));
     }
 
     // GET /api/employees/1
@@ -86,16 +90,7 @@ public class EmployeesController : ControllerBase
     {
         var e = await _db.Employees.FindAsync(id);
         if (e == null) return NotFound();
-
-        return Ok(new EmployeeDto
-        {
-            Id = e.Id,
-            Code = e.Code,
-            FullName = e.FullName,
-            JobTitle = e.JobTitle,
-            Department = e.Department,
-            AvatarUrl = e.AvatarUrl
-        });
+        return Ok(ToDto(e));
     }
 
     // GET /api/employees/1/details?year=2024&month=5

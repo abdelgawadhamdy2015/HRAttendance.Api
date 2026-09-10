@@ -3,12 +3,12 @@ using System;
 namespace HRAttendance.Api.Dtos;
 
 // ---- Employees ----
-public record CreateEmployeeRequest(
-    string Code,
-    string FullName,
-    string JobTitle,
-    string Department,
-    string? AvatarUrl);
+// public record CreateEmployeeRequest(
+//     string Code,
+//     string FullName,
+//     string JobTitle,
+//     string Department,
+//     string? AvatarUrl);
 
 // ---- Attendance ----
 

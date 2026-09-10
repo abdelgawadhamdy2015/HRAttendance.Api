@@ -1,5 +1,21 @@
 namespace HRAttendance.Api.Dtos;
 
+
+
+public record CreateEmployeeRequest(
+    string Code,
+    string FullName,
+    string JobTitle,
+    string Department,
+    string? AvatarUrl,
+    string? NameArabic,
+    string? NameEnglish,
+    string? GradeArabic,
+    string? GradeEnglish,
+    DateOnly? JoiningDate,
+    string? Notes);
+
+
 public class EmployeeDto
 {
     public int Id { get; set; }
@@ -8,7 +24,17 @@ public class EmployeeDto
     public string JobTitle { get; set; } = string.Empty;
     public string Department { get; set; } = string.Empty;
     public string? AvatarUrl { get; set; }
+
+    // Case-statistics fields (added phase 3)
+    public string? NameArabic { get; set; }
+    public string? NameEnglish { get; set; }
+    public string? GradeArabic { get; set; }
+    public string? GradeEnglish { get; set; }
+    public DateOnly? JoiningDate { get; set; }
+    public string Status { get; set; } = "Active";
+    public string? Notes { get; set; }
 }
+
 
 public class EmployeeAttendanceDayDto
 {

@@ -1,5 +1,8 @@
 using System.Text;
+using FluentValidation;
 using HRAttendance.Api.Data;
+using HRAttendance.Api.Dtos;
+using HRAttendance.Api.helpers;
 using HRAttendance.Api.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -16,7 +19,6 @@ builder.Services.AddControllers().AddJsonOptions(o =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
-    // Lets you paste a bearer token into Swagger UI to call [Authorize] endpoints.
     c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
     {
         In = Microsoft.OpenApi.Models.ParameterLocation.Header,
@@ -54,12 +56,20 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 // --- Auth ---
 builder.Services.AddSingleton<JwtTokenService>();
 
-// --- Attendance reports ---
+// --- Case-statistics domain services ---
+builder.Services.AddScoped<IStatisticsCalculationService, StatisticsCalculationService>();
+builder.Services.AddScoped<IAuditService, AuditService>();
+
+// FluentValidation - explicit registrations (predictable, no assembly scanning surprises)
+builder.Services.AddScoped<IValidator<PreviousYearStatisticsInput>, PreviousYearStatisticsInputValidator>();
+builder.Services.AddScoped<IValidator<CurrentYearStatisticsInput>, CurrentYearStatisticsInputValidator>();
+builder.Services.AddScoped<IValidator<UpdateEmployeeStatisticsRequest>, UpdateEmployeeStatisticsRequestValidator>();
+
+// --- Attendance reports (legacy HR app) ---
 builder.Services.AddScoped<IAttendanceReportService, AttendanceReportService>();
 builder.Services.AddSingleton<IAttendanceReportPdfService, AttendanceReportPdfService>();
 
 // QuestPDF: Community is free for eligible individuals/organizations.
-// If the organization is not eligible, use the appropriate paid license instead.
 QuestPDF.Settings.License = LicenseType.Community;
 
 var jwtSection = builder.Configuration.GetSection("Jwt");
@@ -99,6 +109,7 @@ using (var scope = app.Services.CreateScope())
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     db.Database.EnsureCreated();
     SeedData.Seed(db);
+    CaseStatisticsSeedData.Seed(db);
 }
 
 if (app.Environment.IsDevelopment())
