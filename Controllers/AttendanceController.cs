@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using HRAttendance.Api.Authorization;
 using HRAttendance.Api.Data;
 using HRAttendance.Api.Dtos;
@@ -16,17 +17,17 @@ public class AttendanceController : ControllerBase
 {
     private readonly AppDbContext _db;
     private readonly IConfiguration _configuration;
+    private readonly IAuditService _audit;
 
-    public AttendanceController(AppDbContext db, IConfiguration configuration)
+    public AttendanceController(AppDbContext db, IConfiguration configuration, IAuditService audit)
     {
         _db = db;
         _configuration = configuration;
+        _audit = audit;
     }
 
-    // POST /api/attendance/checkin
-    // Records "حاضر" for the given (or today's) date and computes LateMinutes
-    // against the configured official start time (Attendance:OfficialStartTime
-    // in appsettings.json, default 08:30).
+    private int? CurrentUserId => int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var id) ? id : null;
+
     [HttpPost("checkin")]
     [RequirePermission("Attendance.Manage")]
     public async Task<ActionResult<AttendanceRecord>> CheckIn(CheckInRequest request)
@@ -36,44 +37,42 @@ public class AttendanceController : ControllerBase
 
         var date = request.Date ?? DateOnly.FromDateTime(DateTime.Today);
         var time = request.Time ?? TimeOnly.FromDateTime(DateTime.Now);
-
         var record = await AttendanceHelper.GetOrCreateAsync(_db, request.EmployeeId, date);
 
         var officialStartText = _configuration["Attendance:OfficialStartTime"] ?? "08:30";
         var officialStart = TimeOnly.Parse(officialStartText);
+        var old = new { record.Status, record.CheckIn, record.CheckOut, record.LateMinutes };
 
         record.Status = DayStatus.Present;
         record.CheckIn = time;
         record.LateMinutes = time > officialStart ? (int)(time - officialStart).TotalMinutes : 0;
-
         await _db.SaveChangesAsync();
+
+        await _audit.LogAsync(CurrentUserId, "Attendance.CheckIn", "AttendanceRecord", record.Id, old,
+            new { record.Status, record.CheckIn, record.CheckOut, record.LateMinutes });
+        if (record.LateMinutes > 0)
+            await _audit.NotifyAsync($"تم تسجيل حضور متأخر للموظف رقم {request.EmployeeId}: {record.LateMinutes} دقيقة.", NotificationSeverity.Warning);
+
         return Ok(record);
     }
 
-    // POST /api/attendance/checkout
     [HttpPost("checkout")]
     [RequirePermission("Attendance.Manage")]
     public async Task<IActionResult> CheckOut(CheckOutRequest request)
     {
         var date = request.Date ?? DateOnly.FromDateTime(DateTime.Today);
         var time = request.Time ?? TimeOnly.FromDateTime(DateTime.Now);
+        var record = await _db.AttendanceRecords.FirstOrDefaultAsync(r => r.EmployeeId == request.EmployeeId && r.Date == date);
+        if (record is null) return NotFound("No check-in found for this employee/date yet.");
 
-        var record = await _db.AttendanceRecords
-            .FirstOrDefaultAsync(r => r.EmployeeId == request.EmployeeId && r.Date == date);
-
-        if (record is null)
-            return NotFound("No check-in found for this employee/date yet.");
-
+        var old = record.CheckOut;
         record.CheckOut = time;
         await _db.SaveChangesAsync();
+        await _audit.LogAsync(CurrentUserId, "Attendance.CheckOut", "AttendanceRecord", record.Id,
+            new { checkOut = old }, new { checkOut = record.CheckOut });
         return Ok(record);
     }
 
-    // POST /api/attendance/mark
-    // Directly sets a day's status. Use this for إجازة اعتيادية / إجازة عارضة /
-    // إجازة مرضية / انقطاع, or to manually correct a day back to "present"/"none".
-    // (For مأمورية use POST /api/missions, for إذن use POST /api/permission-requests -
-    // those also create their own Mission/PermissionRequest record.)
     [HttpPost("mark")]
     [RequirePermission("Attendance.Manage")]
     public async Task<IActionResult> MarkDay(MarkAttendanceRequest request)
@@ -86,34 +85,33 @@ public class AttendanceController : ControllerBase
             return BadRequest("Status must be one of: present, annualLeave, casualLeave, sickLeave, cutOff, none.");
 
         var record = await AttendanceHelper.GetOrCreateAsync(_db, request.EmployeeId, request.Date);
+        var old = new { record.Status, record.CheckIn, record.CheckOut, record.LateMinutes };
         record.Status = status.Value;
-
-        // Marking a day as leave/absent clears any stale check-in/out/lateness.
         if (status != DayStatus.Present)
         {
             record.CheckIn = null;
             record.CheckOut = null;
             record.LateMinutes = 0;
         }
-
         await _db.SaveChangesAsync();
+        await _audit.LogAsync(CurrentUserId, "Attendance.MarkDay", "AttendanceRecord", record.Id, old,
+            new { record.Status, record.CheckIn, record.CheckOut, record.LateMinutes });
         return Ok(record);
     }
 
-    // POST /api/attendance/lateness
-    // Directly corrects the recorded lateness (minutes) for a day that already
-    // has an attendance record.
     [HttpPost("lateness")]
     [RequirePermission("Attendance.Manage")]
     public async Task<IActionResult> RecordLateness(RecordLatenessRequest request)
     {
-        var record = await _db.AttendanceRecords
-            .FirstOrDefaultAsync(r => r.EmployeeId == request.EmployeeId && r.Date == request.Date);
-
+        if (request.Minutes < 0) return BadRequest("Minutes cannot be negative.");
+        var record = await _db.AttendanceRecords.FirstOrDefaultAsync(r => r.EmployeeId == request.EmployeeId && r.Date == request.Date);
         if (record is null) return NotFound("No attendance record exists for this employee/date yet.");
 
+        var old = record.LateMinutes;
         record.LateMinutes = request.Minutes;
         await _db.SaveChangesAsync();
+        await _audit.LogAsync(CurrentUserId, "Attendance.RecordLateness", "AttendanceRecord", record.Id,
+            new { minutes = old }, new { minutes = record.LateMinutes });
         return Ok(record);
     }
 }

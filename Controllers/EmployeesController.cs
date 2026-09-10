@@ -2,6 +2,8 @@ using HRAttendance.Api.Authorization;
 using HRAttendance.Api.Data;
 using HRAttendance.Api.Dtos;
 using HRAttendance.Api.Models;
+using HRAttendance.Api.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,157 +11,71 @@ namespace HRAttendance.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class EmployeesController : ControllerBase
 {
     private readonly AppDbContext _db;
-    public EmployeesController(AppDbContext db) => _db = db;
+    private readonly IAuditService _audit;
+    public EmployeesController(AppDbContext db, IAuditService audit) { _db = db; _audit = audit; }
 
     private static string StatusToString(DayStatus s) => s switch
     {
-        DayStatus.Present => "present",
-        DayStatus.AnnualLeave => "annualLeave",
-        DayStatus.CasualLeave => "casualLeave",
-        DayStatus.SickLeave => "sickLeave",
-        DayStatus.Permission => "permission",
-        DayStatus.CutOff => "cutOff",
-        DayStatus.Mission => "mission",
-        _ => "none"
+        DayStatus.Present => "present", DayStatus.AnnualLeave => "annualLeave", DayStatus.CasualLeave => "casualLeave",
+        DayStatus.SickLeave => "sickLeave", DayStatus.Permission => "permission", DayStatus.CutOff => "cutOff",
+        DayStatus.Mission => "mission", _ => "none"
     };
 
     private static EmployeeDto ToDto(Employee e) => new()
     {
-        Id = e.Id,
-        Code = e.Code,
-        FullName = e.FullName,
-        JobTitle = e.JobTitle,
-        Department = e.Department,
-        AvatarUrl = e.AvatarUrl,
-        NameArabic = e.NameArabic,
-        NameEnglish = e.NameEnglish,
-        GradeArabic = e.GradeArabic,
-        GradeEnglish = e.GradeEnglish,
-        JoiningDate = e.JoiningDate,
-        Status = e.Status.ToString(),
-        Notes = e.Notes
+        Id = e.Id, Code = e.Code, FullName = e.FullName, JobTitle = e.JobTitle, Department = e.Department,
+        AvatarUrl = e.AvatarUrl, NameArabic = e.NameArabic, NameEnglish = e.NameEnglish, GradeArabic = e.GradeArabic,
+        GradeEnglish = e.GradeEnglish, JoiningDate = e.JoiningDate, Status = e.Status.ToString(), Notes = e.Notes
     };
 
-    // GET /api/employees
     [HttpGet]
-    public async Task<ActionResult<List<EmployeeDto>>> GetAll()
-    {
-        var items = await _db.Employees.ToListAsync();
-        return Ok(items.Select(ToDto).ToList());
-    }
+    [RequirePermission("Employees.View")]
+    public async Task<ActionResult<List<EmployeeDto>>> GetAll() => Ok((await _db.Employees.AsNoTracking().ToListAsync()).Select(ToDto).ToList());
 
-    // POST /api/employees
     [HttpPost]
     [RequirePermission("Employees.Manage")]
     public async Task<ActionResult<EmployeeDto>> Create(CreateEmployeeRequest request)
     {
-        if (string.IsNullOrWhiteSpace(request.Code) || string.IsNullOrWhiteSpace(request.FullName))
-            return BadRequest("Code and FullName are required.");
-
-        if (await _db.Employees.AnyAsync(e => e.Code == request.Code))
-            return Conflict("An employee with this code already exists.");
-
-        var employee = new Employee
-        {
-            Code = request.Code,
-            FullName = request.FullName,
-            JobTitle = request.JobTitle,
-            Department = request.Department,
-            AvatarUrl = request.AvatarUrl,
-            NameArabic = request.NameArabic,
-            NameEnglish = request.NameEnglish,
-            GradeArabic = request.GradeArabic,
-            GradeEnglish = request.GradeEnglish,
-            JoiningDate = request.JoiningDate,
-            Notes = request.Notes,
-            CreatedAt = DateTime.UtcNow
-        };
-
+        if (string.IsNullOrWhiteSpace(request.Code) || string.IsNullOrWhiteSpace(request.FullName)) return BadRequest("Code and FullName are required.");
+        if (await _db.Employees.AnyAsync(e => e.Code == request.Code)) return Conflict("An employee with this code already exists.");
+        var employee = new Employee { Code = request.Code, FullName = request.FullName, JobTitle = request.JobTitle, Department = request.Department, AvatarUrl = request.AvatarUrl, NameArabic = request.NameArabic, NameEnglish = request.NameEnglish, GradeArabic = request.GradeArabic, GradeEnglish = request.GradeEnglish, JoiningDate = request.JoiningDate, Notes = request.Notes, CreatedAt = DateTime.UtcNow };
         _db.Employees.Add(employee);
         await _db.SaveChangesAsync();
-
+        await _audit.LogAsync(this.GetCurrentUserId(), "Employee.Create", "Employee", employee.Id, null, new { employee.Id, employee.Code, employee.FullName, employee.Department });
+        await _audit.NotifyAsync($"تم إضافة الموظف {employee.FullName} إلى قاعدة البيانات.");
         return CreatedAtAction(nameof(GetById), new { id = employee.Id }, ToDto(employee));
     }
 
-    // GET /api/employees/1
     [HttpGet("{id:int}")]
+    [RequirePermission("Employees.View")]
     public async Task<ActionResult<EmployeeDto>> GetById(int id)
     {
-        var e = await _db.Employees.FindAsync(id);
-        if (e == null) return NotFound();
-        return Ok(ToDto(e));
+        var e = await _db.Employees.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id);
+        return e == null ? NotFound() : Ok(ToDto(e));
     }
 
-    // GET /api/employees/1/details?year=2024&month=5
     [HttpGet("{id:int}/details")]
+    [RequirePermission("Attendance.View")]
     public async Task<ActionResult<EmployeeMonthDetailsDto>> GetMonthDetails(int id, [FromQuery] int year, [FromQuery] int month)
     {
-        var records = await _db.AttendanceRecords
-            .Where(r => r.EmployeeId == id && r.Date.Year == year && r.Date.Month == month)
-            .ToListAsync();
-
-        var permissionsUsed = await _db.PermissionRequests
-            .CountAsync(p => p.EmployeeId == id && p.Date.Year == year && p.Date.Month == month);
-
-        var dto = new EmployeeMonthDetailsDto
-        {
-            EmployeeId = id,
-            Year = year,
-            Month = month,
-            TotalPresentDays = records.Count(r => r.Status == DayStatus.Present),
-            AnnualLeaveDays = records.Count(r => r.Status == DayStatus.AnnualLeave),
-            CasualLeaveDays = records.Count(r => r.Status == DayStatus.CasualLeave),
-            SickLeaveDays = records.Count(r => r.Status == DayStatus.SickLeave),
-            CutOffDays = records.Count(r => r.Status == DayStatus.CutOff),
-            PermissionsUsed = permissionsUsed,
-            PermissionsAllowed = 2,
-            TotalLateMinutes = records.Sum(r => r.LateMinutes),
-            Days = records.Select(r => new EmployeeAttendanceDayDto { Date = r.Date, Status = StatusToString(r.Status) }).ToList()
-        };
-
-        return Ok(dto);
+        var records = await _db.AttendanceRecords.Where(r => r.EmployeeId == id && r.Date.Year == year && r.Date.Month == month).ToListAsync();
+        var permissionsUsed = await _db.PermissionRequests.CountAsync(p => p.EmployeeId == id && p.Date.Year == year && p.Date.Month == month);
+        return Ok(new EmployeeMonthDetailsDto { EmployeeId = id, Year = year, Month = month, TotalPresentDays = records.Count(r => r.Status == DayStatus.Present), AnnualLeaveDays = records.Count(r => r.Status == DayStatus.AnnualLeave), CasualLeaveDays = records.Count(r => r.Status == DayStatus.CasualLeave), SickLeaveDays = records.Count(r => r.Status == DayStatus.SickLeave), CutOffDays = records.Count(r => r.Status == DayStatus.CutOff), PermissionsUsed = permissionsUsed, PermissionsAllowed = 2, TotalLateMinutes = records.Sum(r => r.LateMinutes), Days = records.Select(r => new EmployeeAttendanceDayDto { Date = r.Date, Status = StatusToString(r.Status) }).ToList() });
     }
 
-    // GET /api/employees/1/missions?year=2024&month=5
     [HttpGet("{id:int}/missions")]
-    public async Task<ActionResult<List<MissionDto>>> GetMissions(int id, [FromQuery] int year, [FromQuery] int month)
-    {
-        var items = await _db.Missions
-            .Where(m => m.EmployeeId == id && m.Date.Year == year && m.Date.Month == month)
-            .Select(m => new MissionDto { Id = m.Id, Date = m.Date, Reason = m.Reason, Location = m.Location })
-            .ToListAsync();
-        return Ok(items);
-    }
+    [RequirePermission("Attendance.View")]
+    public async Task<ActionResult<List<MissionDto>>> GetMissions(int id, [FromQuery] int year, [FromQuery] int month) => Ok(await _db.Missions.Where(m => m.EmployeeId == id && m.Date.Year == year && m.Date.Month == month).Select(m => new MissionDto { Id = m.Id, Date = m.Date, Reason = m.Reason, Location = m.Location }).ToListAsync());
 
-    // GET /api/employees/1/permissions?year=2024&month=5
     [HttpGet("{id:int}/permissions")]
-    public async Task<ActionResult<List<PermissionDto>>> GetPermissions(int id, [FromQuery] int year, [FromQuery] int month)
-    {
-        var items = await _db.PermissionRequests
-            .Where(p => p.EmployeeId == id && p.Date.Year == year && p.Date.Month == month)
-            .Select(p => new PermissionDto
-            {
-                Id = p.Id,
-                Date = p.Date,
-                From = p.From.ToString("HH:mm"),
-                To = p.To.ToString("HH:mm"),
-                Reason = p.Reason
-            })
-            .ToListAsync();
-        return Ok(items);
-    }
+    [RequirePermission("Attendance.View")]
+    public async Task<ActionResult<List<PermissionDto>>> GetPermissions(int id, [FromQuery] int year, [FromQuery] int month) => Ok(await _db.PermissionRequests.Where(p => p.EmployeeId == id && p.Date.Year == year && p.Date.Month == month).Select(p => new PermissionDto { Id = p.Id, Date = p.Date, From = p.From.ToString("HH:mm"), To = p.To.ToString("HH:mm"), Reason = p.Reason }).ToListAsync());
 
-    // GET /api/employees/1/lateness?year=2024&month=5
     [HttpGet("{id:int}/lateness")]
-    public async Task<ActionResult<List<LatenessDto>>> GetLateness(int id, [FromQuery] int year, [FromQuery] int month)
-    {
-        var items = await _db.AttendanceRecords
-            .Where(r => r.EmployeeId == id && r.Date.Year == year && r.Date.Month == month && r.LateMinutes > 0)
-            .Select(r => new LatenessDto { Date = r.Date, Minutes = r.LateMinutes })
-            .ToListAsync();
-        return Ok(items);
-    }
+    [RequirePermission("Attendance.View")]
+    public async Task<ActionResult<List<LatenessDto>>> GetLateness(int id, [FromQuery] int year, [FromQuery] int month) => Ok(await _db.AttendanceRecords.Where(r => r.EmployeeId == id && r.Date.Year == year && r.Date.Month == month && r.LateMinutes > 0).Select(r => new LatenessDto { Date = r.Date, Minutes = r.LateMinutes }).ToListAsync());
 }
