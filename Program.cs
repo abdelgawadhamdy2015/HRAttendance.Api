@@ -73,7 +73,7 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     db.Database.EnsureCreated();
-    SeedData.Seed(db);
+    SeedData.Seed(db, builder.Configuration);
     CaseStatisticsSeedData.Seed(db);
 }
 
