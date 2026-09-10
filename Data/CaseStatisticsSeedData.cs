@@ -2,24 +2,18 @@ using HRAttendance.Api.Models;
 
 namespace HRAttendance.Api.Data;
 
-/// <summary>
-/// Seeds the RBAC permissions used by the case-statistics domain and grants
-/// them all to the "admin" user created by SeedData.Seed(). Real production
-/// employee/report data should come from POST /api/employees and the Excel
-/// import endpoint (phase 3) - not from source code.
-/// </summary>
 public static class CaseStatisticsSeedData
 {
     public static readonly string[] CaseStatisticsPermissionNames =
     {
-        "Reports.Manage",   // create/edit/delete draft reports, add/remove employees
-        "Reports.Finalize", // lock a report
-        "Reports.Reopen",   // admin-only: unlock a finalized report
-        "Statistics.Edit",  // enter/edit an employee's monthly figures
-        "Statistics.View",  // read-only access (Viewer role)
+        "Reports.Manage",
+        "Reports.Finalize",
+        "Reports.Reopen",
+        "Statistics.Edit",
+        "Statistics.View",
     };
 
-    public static void Seed(AppDbContext db)
+    public static void Seed(AppDbContext db, IConfiguration configuration)
     {
         foreach (var name in CaseStatisticsPermissionNames)
         {
@@ -28,18 +22,15 @@ public static class CaseStatisticsSeedData
         }
         db.SaveChanges();
 
-        var admin = db.Users.FirstOrDefault(u => u.Username == "admin");
+        var username = configuration["BootstrapAdmin:Username"];
+        if (string.IsNullOrWhiteSpace(username)) return;
+        var admin = db.Users.FirstOrDefault(u => u.Username == username);
         if (admin is null) return;
 
-        var permissionIds = db.Permissions
-            .Where(p => CaseStatisticsPermissionNames.Contains(p.Name))
-            .Select(p => p.Id)
-            .ToList();
-
+        var permissionIds = db.Permissions.Where(p => CaseStatisticsPermissionNames.Contains(p.Name)).Select(p => p.Id).ToList();
         foreach (var permissionId in permissionIds)
         {
-            var already = db.UserPermissions.Any(up => up.UserId == admin.Id && up.PermissionId == permissionId);
-            if (!already)
+            if (!db.UserPermissions.Any(up => up.UserId == admin.Id && up.PermissionId == permissionId))
                 db.UserPermissions.Add(new UserPermission { UserId = admin.Id, PermissionId = permissionId });
         }
         db.SaveChanges();
