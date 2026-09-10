@@ -7,11 +7,8 @@ public static class SeedData
 {
     public static void Seed(AppDbContext db)
     {
-        // The application must use real database records. Do not seed demo
-        // employees, attendance records, missions, permission requests, or
-        // notifications.
         SeedPermissions(db);
-        SeedAdmin(db);
+        SeedAdminFromEnvironment(db);
     }
 
     private static void SeedPermissions(AppDbContext db)
@@ -35,35 +32,26 @@ public static class SeedData
             if (db.Permissions.Any(p => p.Name == item.Key)) continue;
             db.Permissions.Add(new Permission { Name = item.Key, Description = item.Value });
         }
-
         db.SaveChanges();
     }
 
-    private static void SeedAdmin(AppDbContext db)
+    private static void SeedAdminFromEnvironment(AppDbContext db)
     {
-        var admin = db.Users.FirstOrDefault(u => u.Username == "admin");
-        if (admin is null)
-        {
-            admin = new User
-            {
-                Username = "admin",
-                Email = "admin@example.com",
-                FullName = "System Admin",
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow
-            };
-            admin.PasswordHash = new PasswordHasher<User>().HashPassword(admin, "Admin@123");
-            db.Users.Add(admin);
-            db.SaveChanges();
-        }
+        if (db.Users.Any()) return;
+
+        var username = Environment.GetEnvironmentVariable("HR_ADMIN_USERNAME");
+        var password = Environment.GetEnvironmentVariable("HR_ADMIN_PASSWORD");
+        var email = Environment.GetEnvironmentVariable("HR_ADMIN_EMAIL");
+        if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password) || string.IsNullOrWhiteSpace(email)) return;
+
+        var admin = new User { Username = username.Trim(), Email = email.Trim(), FullName = "System Administrator", IsActive = true, CreatedAt = DateTime.UtcNow };
+        admin.PasswordHash = new PasswordHasher<User>().HashPassword(admin, password);
+        db.Users.Add(admin);
+        db.SaveChanges();
 
         var permissionIds = db.Permissions.Select(p => p.Id).ToList();
-        var existingIds = db.UserPermissions.Where(up => up.UserId == admin.Id).Select(up => up.PermissionId).ToHashSet();
         foreach (var permissionId in permissionIds)
-        {
-            if (existingIds.Contains(permissionId)) continue;
             db.UserPermissions.Add(new UserPermission { UserId = admin.Id, PermissionId = permissionId });
-        }
         db.SaveChanges();
     }
 }
