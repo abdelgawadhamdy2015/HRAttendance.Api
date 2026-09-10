@@ -2,6 +2,7 @@ using HRAttendance.Api.Authorization;
 using HRAttendance.Api.Data;
 using HRAttendance.Api.Dtos;
 using HRAttendance.Api.Models;
+using HRAttendance.Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -14,7 +15,8 @@ namespace HRAttendance.Api.Controllers;
 public class EmployeesController : ControllerBase
 {
     private readonly AppDbContext _db;
-    public EmployeesController(AppDbContext db) => _db = db;
+    private readonly IAuditService _audit;
+    public EmployeesController(AppDbContext db, IAuditService audit) { _db = db; _audit = audit; }
 
     private static string StatusToString(DayStatus s) => s switch
     {
@@ -32,7 +34,7 @@ public class EmployeesController : ControllerBase
 
     [HttpGet]
     [RequirePermission("Employees.View")]
-    public async Task<ActionResult<List<EmployeeDto>>> GetAll() => Ok((await _db.Employees.ToListAsync()).Select(ToDto).ToList());
+    public async Task<ActionResult<List<EmployeeDto>>> GetAll() => Ok((await _db.Employees.AsNoTracking().ToListAsync()).Select(ToDto).ToList());
 
     [HttpPost]
     [RequirePermission("Employees.Manage")]
@@ -43,6 +45,8 @@ public class EmployeesController : ControllerBase
         var employee = new Employee { Code = request.Code, FullName = request.FullName, JobTitle = request.JobTitle, Department = request.Department, AvatarUrl = request.AvatarUrl, NameArabic = request.NameArabic, NameEnglish = request.NameEnglish, GradeArabic = request.GradeArabic, GradeEnglish = request.GradeEnglish, JoiningDate = request.JoiningDate, Notes = request.Notes, CreatedAt = DateTime.UtcNow };
         _db.Employees.Add(employee);
         await _db.SaveChangesAsync();
+        await _audit.LogAsync(GetCurrentUserId(), "Employee.Create", "Employee", employee.Id, null, new { employee.Id, employee.Code, employee.FullName, employee.Department });
+        await _audit.NotifyAsync($"تم إضافة الموظف {employee.FullName} إلى قاعدة البيانات.");
         return CreatedAtAction(nameof(GetById), new { id = employee.Id }, ToDto(employee));
     }
 
@@ -50,7 +54,7 @@ public class EmployeesController : ControllerBase
     [RequirePermission("Employees.View")]
     public async Task<ActionResult<EmployeeDto>> GetById(int id)
     {
-        var e = await _db.Employees.FindAsync(id);
+        var e = await _db.Employees.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id);
         return e == null ? NotFound() : Ok(ToDto(e));
     }
 
@@ -74,4 +78,6 @@ public class EmployeesController : ControllerBase
     [HttpGet("{id:int}/lateness")]
     [RequirePermission("Attendance.View")]
     public async Task<ActionResult<List<LatenessDto>>> GetLateness(int id, [FromQuery] int year, [FromQuery] int month) => Ok(await _db.AttendanceRecords.Where(r => r.EmployeeId == id && r.Date.Year == year && r.Date.Month == month && r.LateMinutes > 0).Select(r => new LatenessDto { Date = r.Date, Minutes = r.LateMinutes }).ToListAsync());
+
+    private int? GetCurrentUserId() => int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var id) ? id : null;
 }
