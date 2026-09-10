@@ -45,7 +45,7 @@ public class EmployeesController : ControllerBase
         var employee = new Employee { Code = request.Code, FullName = request.FullName, JobTitle = request.JobTitle, Department = request.Department, AvatarUrl = request.AvatarUrl, NameArabic = request.NameArabic, NameEnglish = request.NameEnglish, GradeArabic = request.GradeArabic, GradeEnglish = request.GradeEnglish, JoiningDate = request.JoiningDate, Notes = request.Notes, CreatedAt = DateTime.UtcNow };
         _db.Employees.Add(employee);
         await _db.SaveChangesAsync();
-        await _audit.LogAsync(GetCurrentUserId(), "Employee.Create", "Employee", employee.Id, null, new { employee.Id, employee.Code, employee.FullName, employee.Department });
+        await _audit.LogAsync(this.GetCurrentUserId(), "Employee.Create", "Employee", employee.Id, null, new { employee.Id, employee.Code, employee.FullName, employee.Department });
         await _audit.NotifyAsync($"تم إضافة الموظف {employee.FullName} إلى قاعدة البيانات.");
         return CreatedAtAction(nameof(GetById), new { id = employee.Id }, ToDto(employee));
     }
@@ -78,6 +78,4 @@ public class EmployeesController : ControllerBase
     [HttpGet("{id:int}/lateness")]
     [RequirePermission("Attendance.View")]
     public async Task<ActionResult<List<LatenessDto>>> GetLateness(int id, [FromQuery] int year, [FromQuery] int month) => Ok(await _db.AttendanceRecords.Where(r => r.EmployeeId == id && r.Date.Year == year && r.Date.Month == month && r.LateMinutes > 0).Select(r => new LatenessDto { Date = r.Date, Minutes = r.LateMinutes }).ToListAsync());
-
-    private int? GetCurrentUserId() => int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var id) ? id : null;
 }
