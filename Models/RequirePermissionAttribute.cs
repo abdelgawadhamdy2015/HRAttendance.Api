@@ -32,7 +32,12 @@ public sealed class RequirePermissionAttribute : Attribute, IAsyncAuthorizationF
         var db = context.HttpContext.RequestServices.GetRequiredService<AppDbContext>();
         var hasPermission = await db.UserPermissions
             .AsNoTracking()
-            .AnyAsync(up => up.UserId == userId && up.Permission.Name == _permission, context.HttpContext.RequestAborted);
+            .Where(up => up.UserId == userId)
+            .Select(up => up.Permission.Name)
+            .AnyAsync(name => name == _permission ||
+                (_permission.EndsWith(".View", StringComparison.Ordinal) &&
+                 (name == _permission[..^5] + ".Manage" || name == _permission[..^5] + ".Edit")),
+                context.HttpContext.RequestAborted);
 
         if (!hasPermission)
         {
