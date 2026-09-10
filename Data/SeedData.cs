@@ -1,14 +1,15 @@
 using HRAttendance.Api.Models;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Configuration;
 
 namespace HRAttendance.Api.Data;
 
 public static class SeedData
 {
-    public static void Seed(AppDbContext db)
+    public static void Seed(AppDbContext db, IConfiguration configuration)
     {
         SeedPermissions(db);
-        SeedAdminFromEnvironment(db);
+        SeedAdminFromConfiguration(db, configuration);
     }
 
     private static void SeedPermissions(AppDbContext db)
@@ -35,13 +36,13 @@ public static class SeedData
         db.SaveChanges();
     }
 
-    private static void SeedAdminFromEnvironment(AppDbContext db)
+    private static void SeedAdminFromConfiguration(AppDbContext db, IConfiguration configuration)
     {
         if (db.Users.Any()) return;
 
-        var username = Environment.GetEnvironmentVariable("HR_ADMIN_USERNAME");
-        var password = Environment.GetEnvironmentVariable("HR_ADMIN_PASSWORD");
-        var email = Environment.GetEnvironmentVariable("HR_ADMIN_EMAIL");
+        var username = configuration["BootstrapAdmin:Username"];
+        var password = configuration["BootstrapAdmin:Password"];
+        var email = configuration["BootstrapAdmin:Email"];
         if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password) || string.IsNullOrWhiteSpace(email)) return;
 
         var admin = new User { Username = username.Trim(), Email = email.Trim(), FullName = "System Administrator", IsActive = true, CreatedAt = DateTime.UtcNow };
@@ -49,8 +50,7 @@ public static class SeedData
         db.Users.Add(admin);
         db.SaveChanges();
 
-        var permissionIds = db.Permissions.Select(p => p.Id).ToList();
-        foreach (var permissionId in permissionIds)
+        foreach (var permissionId in db.Permissions.Select(p => p.Id).ToList())
             db.UserPermissions.Add(new UserPermission { UserId = admin.Id, PermissionId = permissionId });
         db.SaveChanges();
     }
