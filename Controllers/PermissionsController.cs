@@ -74,4 +74,65 @@ public class PermissionsController : ControllerBase
         await _audit.NotifyAsync($"تم سحب الصلاحية رقم {request.PermissionId} من المستخدم رقم {request.UserId}.", NotificationSeverity.Warning);
         return Ok();
     }
+
+    [HttpPut("user/{userId:int}")]
+    [RequirePermission("Permissions.Manage")]
+    public async Task<IActionResult> UpdateUserPermissions(int userId, UpdateUserPermissionsRequest request)
+    {
+        if (!await _db.Users.AnyAsync(u => u.Id == userId))
+            return NotFound("User not found.");
+
+        var permissionIds = request.PermissionIds.Distinct().ToList();
+        var validPermissionIds = await _db.Permissions
+            .Where(p => permissionIds.Contains(p.Id))
+            .Select(p => p.Id)
+            .ToListAsync();
+
+        if (validPermissionIds.Count != permissionIds.Count)
+            return BadRequest("One or more permission IDs are invalid.");
+
+        var existing = await _db.UserPermissions
+            .Where(up => up.UserId == userId)
+            .ToListAsync();
+
+        var currentIds = existing.Select(up => up.PermissionId).ToHashSet();
+        var requestedIds = validPermissionIds.ToHashSet();
+
+        var added = requestedIds.Except(currentIds).ToList();
+        var removed = currentIds.Except(requestedIds).ToList();
+
+        if (removed.Count > 0)
+            _db.UserPermissions.RemoveRange(existing.Where(up => removed.Contains(up.PermissionId)));
+
+        foreach (var permissionId in added)
+            _db.UserPermissions.Add(new UserPermission
+            {
+                UserId = userId,
+                PermissionId = permissionId
+            });
+
+        await _db.SaveChangesAsync();
+
+        await _audit.LogAsync(
+            CurrentUserId,
+            "Permission.UpdateUser",
+            "UserPermission",
+            userId,
+            new { PermissionIds = currentIds.OrderBy(x => x).ToList() },
+            new { PermissionIds = requestedIds.OrderBy(x => x).ToList() });
+
+        if (added.Count > 0 || removed.Count > 0)
+        {
+            await _audit.NotifyAsync(
+                $"تم تحديث صلاحيات المستخدم رقم {userId}.",
+                removed.Count > 0 ? NotificationSeverity.Warning : NotificationSeverity.Info);
+        }
+
+        return Ok(await _db.UserPermissions
+            .Where(up => up.UserId == userId)
+            .Select(up => up.Permission)
+            .OrderBy(p => p.Name)
+            .ToListAsync());
+    }
+
 }
