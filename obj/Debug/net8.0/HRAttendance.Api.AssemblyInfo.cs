@@ -10,10 +10,11 @@
 using System;
 using System.Reflection;
 
+[assembly: Microsoft.Extensions.Configuration.UserSecrets.UserSecretsIdAttribute("HRAttendance.Api-Local")]
 [assembly: System.Reflection.AssemblyCompanyAttribute("HRAttendance.Api")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+4c7a3d4b01bc9cdc195ded78ecd09a21340e81e7")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+98bd8661065b8f6dbf41db85ec1f127b5fae5698")]
 [assembly: System.Reflection.AssemblyProductAttribute("HRAttendance.Api")]
 [assembly: System.Reflection.AssemblyTitleAttribute("HRAttendance.Api")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
