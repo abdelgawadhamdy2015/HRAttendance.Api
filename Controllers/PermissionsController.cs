@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using HRAttendance.Api.Authorization;
 using HRAttendance.Api.Data;
+using HRAttendance.Api.Dtos;
 using HRAttendance.Api.DTOs;
 using HRAttendance.Api.Models;
 using HRAttendance.Api.Services;
@@ -62,6 +63,66 @@ public class PermissionsController : ControllerBase
         return Ok();
     }
 
+    [HttpPost("assign-many")]
+    [RequirePermission("Permissions.Manage")]
+    public async Task<IActionResult> AssignMany(UpdateUserPermissionsRequestDto request)
+    {
+        var userExists = await _db.Users.AnyAsync(u => u.Id == request.UserId);
+
+        if (!userExists)
+            return NotFound("User not found.");
+
+        var permissionIds = request.PermissionIds
+            .Distinct()
+            .ToList();
+
+        var validPermissionIds = await _db.Permissions
+            .Where(p => permissionIds.Contains(p.Id))
+            .Select(p => p.Id)
+            .ToListAsync();
+
+        if (validPermissionIds.Count != permissionIds.Count)
+            return BadRequest("One or more permissions do not exist.");
+
+        // Get current permissions
+        var currentPermissions = await _db.UserPermissions
+            .Where(up => up.UserId == request.UserId)
+            .ToListAsync();
+
+        // Remove old permissions
+        _db.UserPermissions.RemoveRange(currentPermissions);
+
+        // Add new permissions
+        var newPermissions = validPermissionIds.Select(permissionId =>
+            new UserPermission
+            {
+                UserId = request.UserId,
+                PermissionId = permissionId
+            });
+
+        await _db.UserPermissions.AddRangeAsync(newPermissions);
+
+        await _db.SaveChangesAsync();
+
+        await _audit.LogAsync(
+            CurrentUserId,
+            "Permission.Update",
+            "UserPermission",
+            request.UserId,
+            null,
+            new
+            {
+                request.UserId,
+                PermissionIds = validPermissionIds
+            });
+
+        await _audit.NotifyAsync(
+            $"تم تحديث صلاحيات المستخدم رقم {request.UserId}.");
+        var updatedPermissions = await _db.UserPermissions
+                   .Where(up => up.UserId == request.UserId)
+                   .ToListAsync();
+        return Ok(updatedPermissions);
+    }
     [HttpPost("revoke")]
     [RequirePermission("Permissions.Manage")]
     public async Task<IActionResult> Revoke(AssignPermissionRequest request)
