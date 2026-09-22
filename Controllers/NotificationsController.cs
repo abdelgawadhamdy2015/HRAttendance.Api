@@ -1,4 +1,4 @@
-using HRAttendance.Api.Authorization;
+using System.Security.Claims;
 using HRAttendance.Api.Data;
 using HRAttendance.Api.Dtos;
 using Microsoft.AspNetCore.Authorization;
@@ -13,10 +13,13 @@ namespace HRAttendance.Api.Controllers;
 public sealed class NotificationsController(AppDbContext db) : ControllerBase
 {
     [HttpGet]
-    [RequirePermission("Notifications.View")]
     public async Task<IActionResult> Get(CancellationToken cancellationToken)
     {
+        if (!int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
+            return Unauthorized();
+
         var items = await db.Notifications.AsNoTracking()
+            .Where(n => n.UserId == userId)
             .OrderByDescending(n => n.CreatedAt)
             .Select(n => new NotificationDto
             {

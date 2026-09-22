@@ -51,7 +51,7 @@ public class AttendanceController : ControllerBase
         await _audit.LogAsync(CurrentUserId, "Attendance.CheckIn", "AttendanceRecord", record.Id, old,
             new { record.Status, record.CheckIn, record.CheckOut, record.LateMinutes });
         if (record.LateMinutes > 0)
-            await _audit.NotifyAsync($"تم تسجيل حضور متأخر للموظف رقم {request.EmployeeId}: {record.LateMinutes} دقيقة.", NotificationSeverity.Warning);
+            await _audit.NotifyAsync(CurrentUserId, $"تم تسجيل حضور متأخر للموظف رقم {request.EmployeeId}: {record.LateMinutes} دقيقة.", NotificationSeverity.Warning);
 
         return Ok(record);
     }

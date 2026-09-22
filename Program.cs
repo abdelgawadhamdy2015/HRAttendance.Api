@@ -73,6 +73,14 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     db.Database.EnsureCreated();
+
+    // The project currently uses EnsureCreated instead of EF migrations. Keep existing
+    // databases compatible with the new per-user notification and report-owner columns.
+    db.Database.ExecuteSqlRaw(@"IF COL_LENGTH('dbo.Users', 'EmployeeId') IS NULL
+    ALTER TABLE [dbo].[Users] ADD [EmployeeId] int NULL;
+IF COL_LENGTH('dbo.Notifications', 'UserId') IS NULL
+    ALTER TABLE [dbo].[Notifications] ADD [UserId] int NULL;");
+
     SeedData.Seed(db, builder.Configuration);
     CaseStatisticsSeedData.Seed(db, builder.Configuration);
 }

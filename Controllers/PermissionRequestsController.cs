@@ -41,7 +41,7 @@ public class PermissionRequestsController : ControllerBase
         await _db.SaveChangesAsync();
 
         await _audit.LogAsync(CurrentUserId, "PermissionRequest.Create", "PermissionRequest", permission.Id, null, new { permission.Id, permission.EmployeeId, permission.Date, permission.From, permission.To, permission.Reason });
-        await _audit.NotifyAsync($"تم تسجيل إذن للموظف رقم {permission.EmployeeId} بتاريخ {permission.Date:yyyy-MM-dd}.");
+        await _audit.NotifyAsync(CurrentUserId, $"تم تسجيل إذن للموظف رقم {permission.EmployeeId} بتاريخ {permission.Date:yyyy-MM-dd}.");
         return Ok(new PermissionDto { Id = permission.Id, Date = permission.Date, From = permission.From.ToString("HH:mm"), To = permission.To.ToString("HH:mm"), Reason = permission.Reason });
     }
 }
