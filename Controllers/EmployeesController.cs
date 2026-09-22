@@ -46,7 +46,7 @@ public class EmployeesController : ControllerBase
         _db.Employees.Add(employee);
         await _db.SaveChangesAsync();
         await _audit.LogAsync(this.GetCurrentUserId(), "Employee.Create", "Employee", employee.Id, null, new { employee.Id, employee.Code, employee.FullName, employee.Department });
-        await _audit.NotifyAsync($"تم إضافة الموظف {employee.FullName} إلى قاعدة البيانات.");
+        await _audit.NotifyAsync(CurrentUserId, $"تم إضافة الموظف {employee.FullName} إلى قاعدة البيانات.");
         return CreatedAtAction(nameof(GetById), new { id = employee.Id }, ToDto(employee));
     }
 
