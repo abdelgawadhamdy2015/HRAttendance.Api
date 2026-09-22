@@ -58,7 +58,7 @@ public class PermissionsController : ControllerBase
         _db.UserPermissions.Add(new UserPermission { UserId = request.UserId, PermissionId = request.PermissionId });
         await _db.SaveChangesAsync();
         await _audit.LogAsync(CurrentUserId, "Permission.Assign", "UserPermission", request.PermissionId, null, new { request.UserId, request.PermissionId });
-        await _audit.NotifyAsync($"تم منح الصلاحية رقم {request.PermissionId} للمستخدم رقم {request.UserId}.");
+        await _audit.NotifyAsync(CurrentUserId, $"تم منح الصلاحية رقم {request.PermissionId} للمستخدم رقم {request.UserId}.");
         return Ok();
     }
 
@@ -71,7 +71,7 @@ public class PermissionsController : ControllerBase
         _db.UserPermissions.Remove(link);
         await _db.SaveChangesAsync();
         await _audit.LogAsync(CurrentUserId, "Permission.Revoke", "UserPermission", request.PermissionId, new { request.UserId, request.PermissionId }, null);
-        await _audit.NotifyAsync($"تم سحب الصلاحية رقم {request.PermissionId} من المستخدم رقم {request.UserId}.", NotificationSeverity.Warning);
+        await _audit.NotifyAsync(CurrentUserId, $"تم سحب الصلاحية رقم {request.PermissionId} من المستخدم رقم {request.UserId}.", NotificationSeverity.Warning);
         return Ok();
     }
 
@@ -124,6 +124,7 @@ public class PermissionsController : ControllerBase
         if (added.Count > 0 || removed.Count > 0)
         {
             await _audit.NotifyAsync(
+                userId,
                 $"تم تحديث صلاحيات المستخدم رقم {userId}.",
                 removed.Count > 0 ? NotificationSeverity.Warning : NotificationSeverity.Info);
         }
