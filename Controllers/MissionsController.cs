@@ -35,7 +35,7 @@ public class MissionsController : ControllerBase
         await _db.SaveChangesAsync();
 
         await _audit.LogAsync(CurrentUserId, "Mission.Create", "Mission", mission.Id, null, new { mission.Id, mission.EmployeeId, mission.Date, mission.Reason, mission.Location });
-        await _audit.NotifyAsync($"تم تسجيل مأمورية للموظف رقم {mission.EmployeeId} بتاريخ {mission.Date:yyyy-MM-dd}.");
+        await _audit.NotifyAsync(CurrentUserId, $"تم تسجيل مأمورية للموظف رقم {mission.EmployeeId} بتاريخ {mission.Date:yyyy-MM-dd}.");
 
         return Ok(new MissionDto { Id = mission.Id, Date = mission.Date, Reason = mission.Reason, Location = mission.Location });
     }
