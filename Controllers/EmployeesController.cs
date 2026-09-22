@@ -6,7 +6,7 @@ using HRAttendance.Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-
+using System.Security.Claims;
 namespace HRAttendance.Api.Controllers;
 
 [ApiController]
@@ -16,20 +16,38 @@ public class EmployeesController : ControllerBase
 {
     private readonly AppDbContext _db;
     private readonly IAuditService _audit;
-    public EmployeesController(AppDbContext db, IAuditService audit) { _db = db; _audit = audit; }
+    private int? CurrentUserId =>
+    int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var id)
+        ? id
+        : null; public EmployeesController(AppDbContext db, IAuditService audit) { _db = db; _audit = audit; }
 
     private static string StatusToString(DayStatus s) => s switch
     {
-        DayStatus.Present => "present", DayStatus.AnnualLeave => "annualLeave", DayStatus.CasualLeave => "casualLeave",
-        DayStatus.SickLeave => "sickLeave", DayStatus.Permission => "permission", DayStatus.CutOff => "cutOff",
-        DayStatus.Mission => "mission", _ => "none"
+        DayStatus.Present => "present",
+        DayStatus.AnnualLeave => "annualLeave",
+        DayStatus.CasualLeave => "casualLeave",
+        DayStatus.SickLeave => "sickLeave",
+        DayStatus.Permission => "permission",
+        DayStatus.CutOff => "cutOff",
+        DayStatus.Mission => "mission",
+        _ => "none"
     };
 
     private static EmployeeDto ToDto(Employee e) => new()
     {
-        Id = e.Id, Code = e.Code, FullName = e.FullName, JobTitle = e.JobTitle, Department = e.Department,
-        AvatarUrl = e.AvatarUrl, NameArabic = e.NameArabic, NameEnglish = e.NameEnglish, GradeArabic = e.GradeArabic,
-        GradeEnglish = e.GradeEnglish, JoiningDate = e.JoiningDate, Status = e.Status.ToString(), Notes = e.Notes
+        Id = e.Id,
+        Code = e.Code,
+        FullName = e.FullName,
+        JobTitle = e.JobTitle,
+        Department = e.Department,
+        AvatarUrl = e.AvatarUrl,
+        NameArabic = e.NameArabic,
+        NameEnglish = e.NameEnglish,
+        GradeArabic = e.GradeArabic,
+        GradeEnglish = e.GradeEnglish,
+        JoiningDate = e.JoiningDate,
+        Status = e.Status.ToString(),
+        Notes = e.Notes
     };
 
     [HttpGet]

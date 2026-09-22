@@ -117,7 +117,8 @@ public class PermissionsController : ControllerBase
             });
 
         await _audit.NotifyAsync(
-            $"تم تحديث صلاحيات المستخدم رقم {request.UserId}.");
+     request.UserId,
+     $"تم تحديث صلاحيات المستخدم رقم {request.UserId}.");
         var updatedPermissions = await _db.UserPermissions
                    .Where(up => up.UserId == request.UserId)
                    .ToListAsync();

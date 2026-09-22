@@ -135,10 +135,11 @@ public sealed class AttendanceReportsController : ControllerBase
         var userId = GetCurrentUserId();
         if (userId is null) return false;
 
-        var permissionNames = await _db.UserPermissions
-            .Where(up => up.UserId == userId.Value)
-            .Select(up => up.Permission.Name)
-            .ToHashSetAsync(cancellationToken);
+        var permissionNames = (await _db.UserPermissions
+      .Where(up => up.UserId == userId.Value)
+      .Select(up => up.Permission.Name)
+      .ToListAsync(cancellationToken))
+      .ToHashSet(StringComparer.Ordinal);
 
         if (HasViewAllReports(permissionNames))
             return true;

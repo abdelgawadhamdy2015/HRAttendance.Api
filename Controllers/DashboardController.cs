@@ -23,10 +23,11 @@ public class DashboardController : ControllerBase
         var userId = GetCurrentUserId();
         if (userId is null) return Unauthorized();
 
-        var permissions = await _db.UserPermissions
-            .Where(up => up.UserId == userId.Value)
-            .Select(up => up.Permission.Name)
-            .ToHashSetAsync();
+        var permissions = (await _db.UserPermissions
+    .Where(up => up.UserId == userId.Value)
+    .Select(up => up.Permission.Name)
+    .ToListAsync())
+    .ToHashSet(StringComparer.Ordinal);
 
         var canDashboard = HasView(permissions, "Dashboard.View");
         if (!canDashboard)
