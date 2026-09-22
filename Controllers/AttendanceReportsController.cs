@@ -154,17 +154,6 @@ public sealed class AttendanceReportsController : ControllerBase
         return ownEmployeeId.HasValue;
     }
 
-    private async Task<bool> CanViewAllReportsAsync(CancellationToken cancellationToken)
-    {
-        var userId = GetCurrentUserId();
-        if (userId is null) return false;
-        var permissions = await _db.UserPermissions
-            .Where(up => up.UserId == userId.Value)
-            .Select(up => up.Permission.Name)
-            .ToListAsync(cancellationToken);
-        return HasViewAllReports(permissions);
-    }
-
     private static bool HasViewAllReports(IEnumerable<string> permissions)
     {
         var set = permissions.ToHashSet(StringComparer.Ordinal);
