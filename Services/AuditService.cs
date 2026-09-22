@@ -7,7 +7,7 @@ namespace HRAttendance.Api.Services;
 public interface IAuditService
 {
     Task LogAsync(int? userId, string action, string entity, int? entityId, object? oldValue = null, object? newValue = null);
-    Task NotifyAsync(string message, NotificationSeverity severity = NotificationSeverity.Info);
+    Task NotifyAsync(int? userId, string message, NotificationSeverity severity = NotificationSeverity.Info);
 }
 
 public sealed class AuditService(AppDbContext db) : IAuditService
@@ -29,10 +29,11 @@ public sealed class AuditService(AppDbContext db) : IAuditService
         await _db.SaveChangesAsync();
     }
 
-    public async Task NotifyAsync(string message, NotificationSeverity severity = NotificationSeverity.Info)
+    public async Task NotifyAsync(int? userId, string message, NotificationSeverity severity = NotificationSeverity.Info)
     {
         _db.Notifications.Add(new AppNotification
         {
+            UserId = userId,
             Message = message,
             Severity = severity,
             CreatedAt = DateTime.UtcNow
